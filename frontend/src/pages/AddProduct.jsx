@@ -46,8 +46,11 @@ function AddProduct() {
 
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label className="form-label">Product Name</label>
+          <label htmlFor="productName" className="form-label">
+            Product Name
+          </label>
           <input
+            id="productName"
             type="text"
             className="form-control"
             value={name}
@@ -57,8 +60,11 @@ function AddProduct() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Description</label>
+          <label htmlFor="productDescription" className="form-label">
+            Description
+          </label>
           <textarea
+            id="productDescription"
             className="form-control"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
@@ -67,8 +73,11 @@ function AddProduct() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Price</label>
+          <label htmlFor="productPrice" className="form-label">
+            Price
+          </label>
           <input
+            id="productPrice"
             type="number"
             step="0.01"
             min="0"
@@ -80,8 +89,11 @@ function AddProduct() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Quantity</label>
+          <label htmlFor="productQuantity" className="form-label">
+            Quantity
+          </label>
           <input
+            id="productQuantity"
             type="number"
             min="0"
             className="form-control"
@@ -92,8 +104,11 @@ function AddProduct() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Category ID</label>
+          <label htmlFor="productCategory" className="form-label">
+            Category ID
+          </label>
           <input
+            id="productCategory"
             type="number"
             min="1"
             className="form-control"
@@ -104,13 +119,14 @@ function AddProduct() {
 
         <div className="form-check mb-3">
           <input
+            id="publicProduct"
             type="checkbox"
             className="form-check-input"
             checked={isPublic}
             onChange={(event) => setIsPublic(event.target.checked)}
           />
 
-          <label className="form-check-label">
+          <label htmlFor="publicProduct" className="form-check-label">
             Public Product
           </label>
         </div>

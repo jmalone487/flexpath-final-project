@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 function EditProduct() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -10,14 +11,28 @@ function EditProduct() {
   const [quantity, setQuantity] = useState("");
 
   useEffect(() => {
-    fetch(`/api/products/${id}`)
-      .then((response) => response.json())
-      .then((product) => {
+    async function loadProduct() {
+      try {
+        const response = await fetch(`/api/products/${id}`);
+
+        if (!response.ok) {
+          window.alert("Unable to load product.");
+          return;
+        }
+
+        const product = await response.json();
+
         setName(product.name);
         setDescription(product.description);
         setPrice(product.price);
         setQuantity(product.quantity);
-      });
+      } catch (error) {
+        console.error(error);
+        window.alert("Unable to load product.");
+      }
+    }
+
+    loadProduct();
   }, [id]);
 
   async function handleSubmit(event) {
@@ -30,7 +45,7 @@ function EditProduct() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name,
@@ -38,20 +53,20 @@ function EditProduct() {
           price: Number(price),
           quantity: Number(quantity),
           public: true,
-          categoryId: 1
-        })
+          categoryId: 1,
+        }),
       });
 
-      console.log("Update status:", response.status);
-
       if (response.ok) {
-        window.location.href = "/products";
+        navigate("/products");
       } else {
-        alert("Unable to update product. Status: " + response.status);
+        window.alert(
+          "Unable to update product. Status: " + response.status
+        );
       }
     } catch (error) {
       console.error(error);
-      alert("Unable to update product.");
+      window.alert("Unable to update product.");
     }
   }
 

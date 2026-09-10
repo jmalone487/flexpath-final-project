@@ -5,7 +5,6 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-
 import AddProduct from "./pages/AddProduct";
 
 beforeEach(() => {
@@ -36,6 +35,7 @@ test("renders add product form", () => {
 test("submits a new product", async () => {
   global.fetch.mockResolvedValueOnce({
     ok: false,
+    status: 400,
   });
 
   render(<AddProduct />);
@@ -68,9 +68,13 @@ test("submits a new product", async () => {
 
   await waitFor(() => {
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/products",
+      "http://localhost:8080/api/products",
       expect.objectContaining({
         method: "POST",
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        }),
       })
     );
   });
@@ -79,6 +83,7 @@ test("submits a new product", async () => {
 test("shows alert when submission fails", async () => {
   global.fetch.mockResolvedValueOnce({
     ok: false,
+    status: 500,
   });
 
   render(<AddProduct />);
@@ -107,7 +112,7 @@ test("shows alert when submission fails", async () => {
 
   await waitFor(() => {
     expect(window.alert).toHaveBeenCalledWith(
-      "Unable to add product."
+      "Unable to add product. Status: 500"
     );
   });
 });

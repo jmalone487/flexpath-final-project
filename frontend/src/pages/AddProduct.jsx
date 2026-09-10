@@ -14,28 +14,32 @@ function AddProduct() {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          price: Number(price),
-          quantity: Number(quantity),
-          public: isPublic,
-          categoryId: categoryId ? Number(categoryId) : null
-        })
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/products",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name,
+            description,
+            price: Number(price),
+            quantity: Number(quantity),
+            public: isPublic,
+            categoryId: categoryId ? Number(categoryId) : null
+          })
+        }
+      );
 
       if (response.ok) {
         window.location.href = "/products";
       } else {
-        alert("Unable to add product.");
+        alert("Unable to add product. Status: " + response.status);
       }
     } catch (error) {
+      console.error("Error adding product:", error);
       alert("Unable to add product.");
     }
   }
@@ -49,6 +53,7 @@ function AddProduct() {
           <label htmlFor="productName" className="form-label">
             Product Name
           </label>
+
           <input
             id="productName"
             type="text"
@@ -63,6 +68,7 @@ function AddProduct() {
           <label htmlFor="productDescription" className="form-label">
             Description
           </label>
+
           <textarea
             id="productDescription"
             className="form-control"
@@ -76,6 +82,7 @@ function AddProduct() {
           <label htmlFor="productPrice" className="form-label">
             Price
           </label>
+
           <input
             id="productPrice"
             type="number"
@@ -92,6 +99,7 @@ function AddProduct() {
           <label htmlFor="productQuantity" className="form-label">
             Quantity
           </label>
+
           <input
             id="productQuantity"
             type="number"
@@ -107,6 +115,7 @@ function AddProduct() {
           <label htmlFor="productCategory" className="form-label">
             Category ID
           </label>
+
           <input
             id="productCategory"
             type="number"
@@ -126,7 +135,10 @@ function AddProduct() {
             onChange={(event) => setIsPublic(event.target.checked)}
           />
 
-          <label htmlFor="publicProduct" className="form-check-label">
+          <label
+            htmlFor="publicProduct"
+            className="form-check-label"
+          >
             Public Product
           </label>
         </div>

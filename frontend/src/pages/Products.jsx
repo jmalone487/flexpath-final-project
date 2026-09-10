@@ -3,21 +3,78 @@ import { Link } from "react-router-dom";
 
 function Products() {
   const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
+  const [usernameSearch, setUsernameSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/products")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Unable to load products.");
-        }
-        return response.json();
-      })
-      .then((data) => setProducts(data))
-      .catch((error) => setError(error.message));
+    loadProducts();
   }, []);
+
+  async function loadProducts() {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/products",
+        {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`
+              }
+            : {}
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to load products.");
+      }
+
+      const data = await response.json();
+      setProducts(data);
+      setError("");
+    } catch (error) {
+      setError(error.message);
+    }
+  }
+
+  async function handleSearch(event) {
+    event.preventDefault();
+
+    const token = localStorage.getItem("token");
+
+    const url =
+      "http://localhost:8080/api/products/search" +
+      `?name=${encodeURIComponent(nameSearch)}` +
+      `&username=${encodeURIComponent(usernameSearch)}`;
+
+    try {
+      const response = await fetch(url, {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`
+            }
+          : {}
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to search products.");
+      }
+
+      const data = await response.json();
+      setProducts(data);
+      setError("");
+    } catch (error) {
+      setError(error.message);
+    }
+  }
+
+  function handleClearSearch() {
+    setNameSearch("");
+    setUsernameSearch("");
+    loadProducts();
+  }
 
   async function handleDelete(id) {
     const confirmed = window.confirm(
@@ -31,40 +88,50 @@ function Products() {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch(`/api/products/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await fetch(
+        `http://localhost:8080/api/products/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
-      });
+      );
 
       if (response.ok) {
         setProducts(
           products.filter((product) => product.id !== id)
         );
       } else {
-        alert("Unable to delete product. Status: " + response.status);
+        alert(
+          "Unable to delete product. Status: " +
+            response.status
+        );
       }
     } catch (error) {
       alert("Unable to delete product.");
     }
   }
 
-  const displayedProducts = products
-    .filter((product) =>
-      product.name.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (sortOrder === "low") {
-        return Number(a.price) - Number(b.price);
-      }
+  const displayedProducts = [...products].sort((a, b) => {
+    if (sortOrder === "price-low") {
+      return Number(a.price) - Number(b.price);
+    }
 
-      if (sortOrder === "high") {
-        return Number(b.price) - Number(a.price);
-      }
+    if (sortOrder === "price-high") {
+      return Number(b.price) - Number(a.price);
+    }
 
-      return 0;
-    });
+    if (sortOrder === "name-az") {
+      return a.name.localeCompare(b.name);
+    }
+
+    if (sortOrder === "name-za") {
+      return b.name.localeCompare(a.name);
+    }
+
+    return 0;
+  });
 
   return (
     <main className="container mt-5">
@@ -74,26 +141,77 @@ function Products() {
         Discover products selected for everyday life.
       </p>
 
-      <div className="row mb-4">
-        <div className="col-md-6 mb-2">
+      <form onSubmit={handleSearch} className="row mb-4">
+        <div className="col-md-4 mb-2">
           <input
             type="text"
             className="form-control"
-            placeholder="Search products..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by product name..."
+            value={nameSearch}
+            onChange={(event) =>
+              setNameSearch(event.target.value)
+            }
           />
         </div>
 
         <div className="col-md-4 mb-2">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search by username..."
+            value={usernameSearch}
+            onChange={(event) =>
+              setUsernameSearch(event.target.value)
+            }
+          />
+        </div>
+
+        <div className="col-md-2 mb-2">
+          <button
+            type="submit"
+            className="btn btn-dark w-100"
+          >
+            Search
+          </button>
+        </div>
+
+        <div className="col-md-2 mb-2">
+          <button
+            type="button"
+            className="btn btn-outline-secondary w-100"
+            onClick={handleClearSearch}
+          >
+            Clear
+          </button>
+        </div>
+      </form>
+
+      <div className="row mb-4">
+        <div className="col-md-4">
           <select
             className="form-select"
             value={sortOrder}
-            onChange={(event) => setSortOrder(event.target.value)}
+            onChange={(event) =>
+              setSortOrder(event.target.value)
+            }
           >
             <option value="">Sort Products</option>
-            <option value="low">Price: Low to High</option>
-            <option value="high">Price: High to Low</option>
+
+            <option value="price-low">
+              Price: Low to High
+            </option>
+
+            <option value="price-high">
+              Price: High to Low
+            </option>
+
+            <option value="name-az">
+              Name: A to Z
+            </option>
+
+            <option value="name-za">
+              Name: Z to A
+            </option>
           </select>
         </div>
       </div>
@@ -128,6 +246,16 @@ function Products() {
                   In Stock: {product.quantity}
                 </p>
 
+                <p>
+                  Seller: {product.username}
+                </p>
+
+                {!product.public && (
+                  <p className="text-muted">
+                    Private Product
+                  </p>
+                )}
+
                 <Link
                   to={`/products/${product.id}`}
                   className="btn btn-dark"
@@ -145,7 +273,9 @@ function Products() {
                 <button
                   type="button"
                   className="btn btn-outline-danger ms-2"
-                  onClick={() => handleDelete(product.id)}
+                  onClick={() =>
+                    handleDelete(product.id)
+                  }
                 >
                   Delete
                 </button>
@@ -155,11 +285,12 @@ function Products() {
         ))}
       </div>
 
-      {displayedProducts.length === 0 && !error && (
-        <div className="alert alert-secondary">
-          No products found.
-        </div>
-      )}
+      {displayedProducts.length === 0 &&
+        !error && (
+          <div className="alert alert-secondary">
+            No products found.
+          </div>
+        )}
     </main>
   );
 }
